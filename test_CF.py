@@ -2,6 +2,19 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy import sparse 
+
+
+def load_ratings(file_path):
+    """Load [user_id, item_id, rating] data from a whitespace-separated file."""
+    r_cols = ['user_id', 'item_id', 'rating']
+    ratings = pd.read_csv(file_path, sep=r'\s+', names=r_cols, encoding='latin-1')
+    # Keep ids as integers for matrix indexing, ratings as float.
+    ratings['user_id'] = ratings['user_id'].astype(np.int32)
+    ratings['item_id'] = ratings['item_id'].astype(np.int32)
+    ratings['rating'] = ratings['rating'].astype(np.float64)
+    return ratings.to_numpy()
+
+
 class CF(object):
     """docstring for CF"""
     def __init__(self, Y_data, k, dist_func = cosine_similarity):
@@ -32,6 +45,9 @@ class CF(object):
             item_ids = self.Y_data[ids, 1] 
             # and the corresponding ratings 
             ratings = self.Y_data[ids, 2]
+            if ratings.size == 0:
+                self.mu[n] = 0
+                continue
             # take mean
             self.mu[n] = np.mean(ratings) 
             # normalize
@@ -67,13 +83,17 @@ class CF(object):
         ids = np.where(self.Y_data[:, 1] == i)[0].astype(np.int32)
         # Step 2: 
         users_rated_i = (self.Y_data[ids, 0]).astype(np.int32)
-        # Step 3: find similarity btw the current user and others 
+        if users_rated_i.size == 0:
+            return 0 if normalized else self.mu[u]
+        # Step 3: find similarity btw the current user and others
         # who already rated i
         sim = self.S[u, users_rated_i]
         # Step 4: find the k most similarity users
         a = np.argsort(sim)[-self.k:] 
         # and the corresponding similarity levels
         nearest_s = sim[a]
+        if np.abs(nearest_s).sum() == 0:
+            return 0 if normalized else self.mu[u]
         # How did each of 'near' users rate item i
         r = self.Ybar[i, users_rated_i[a]]
         if normalized:
@@ -109,15 +129,21 @@ class CF(object):
             recommended_items = self.recommend(u)
             print('    for user ', u, ': ', recommended_items)
 
+if __name__ == '__main__':
+    Y_data = load_ratings('ex.dat')
+    
+    # Run User-based CF
+    print('--- USER-BASED CF ---')
+    rs_user = CF(Y_data, k=2)
+    rs_user.fit()
+    rs_user.print_recommendation()
 
-# data file 
-r_cols = ['user_id', 'item_id', 'rating']
+    # Run Item-based CF
+    # print('\n--- ITEM-BASED CF ---')
+    # Y_data_item = Y_data[:, [1, 0, 2]]
+    # rs_item = CF(Y_data_item, k=2)
+    # rs_item.fit()
+    # print('Recommendation:')
+    # for item_id in range(rs_item.n_users):
+    #     print('    for item ', item_id, ': ', rs_item.recommend(item_id))
 
-ratings = pd.read_csv('ex.dat', sep = ' ', names = r_cols, encoding='latin-1')
-
-Y_data = ratings.to_numpy()#.astype(np.float32)
-
-rs = CF(Y_data, k = 2)
-rs.fit()
-# print recommended items for user 4 
-rs.print_recommendation()

@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+
+# Data files (optional, but usually we don't commit large datasets.
+# In this case, ml-100k and .dat are part of the project so we DO NOT ignore them.
+# We just ignore typical temp data).
+*.swp
