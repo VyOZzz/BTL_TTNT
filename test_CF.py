@@ -7,7 +7,7 @@ from scipy import sparse
 def load_ratings(file_path):
     """Load [user_id, item_id, rating] data from a whitespace-separated file."""
     r_cols = ['user_id', 'item_id', 'rating']
-    ratings = pd.read_csv(file_path, sep=r'\s+', names=r_cols, encoding='latin-1')
+    ratings = pd.read_csv(file_path, sep=r'\s+', names=r_cols, usecols=[0, 1, 2], encoding='latin-1')
     # Keep ids as integers for matrix indexing, ratings as float.
     ratings['user_id'] = ratings['user_id'].astype(np.int32)
     ratings['item_id'] = ratings['item_id'].astype(np.int32)

@@ -8,7 +8,7 @@ from test_CF import CF, load_ratings
 def parse_uploaded_file(uploaded_file):
     """Parse uploaded whitespace-separated ratings file to numpy array."""
     r_cols = ['user_id', 'item_id', 'rating']
-    ratings = pd.read_csv(uploaded_file, sep=r'\s+', names=r_cols, engine='python')
+    ratings = pd.read_csv(uploaded_file, sep=r'\s+', names=r_cols, usecols=[0, 1, 2], engine='python')
     ratings['user_id'] = ratings['user_id'].astype(np.int32)
     ratings['item_id'] = ratings['item_id'].astype(np.int32)
     ratings['rating'] = ratings['rating'].astype(np.float64)
@@ -44,7 +44,7 @@ st.caption('Giao dien demo thuat toan goi y trong `test_CF.py` (de nhin, de hieu
 
 with st.sidebar:
     st.header('Cau hinh mo hinh')
-    source = st.radio('Nguon du lieu', ['ex.dat', 'ex2.dat', 'Upload file'])
+    source = st.radio('Nguon du lieu', ['ex.dat', 'ex2.dat', 'ml-100k/u.data', 'Upload file'])
     k = st.slider('So lang gieng gan nhat (k)', min_value=1, max_value=10, value=2)
 
     uploaded_file = None
@@ -110,7 +110,8 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader('Goi y item cho user')
-    user_for_recommend = st.selectbox('Chon user', list(range(model.n_users)), key='recommend_user')
+    unique_users = np.unique(model.Y_data[:, 0]).astype(int).tolist()
+    user_for_recommend = st.selectbox('Chon user', unique_users, key='recommend_user')
     if st.button('Xem goi y'):
         mode = 'top_n' if recommendation_mode == 'Top-N' else 'threshold'
         items, scored_items = recommend_for_user(
@@ -128,8 +129,9 @@ with col1:
 
 with col2:
     st.subheader('Du doan diem user-item')
-    user_for_pred = st.selectbox('User du doan', list(range(model.n_users)), key='pred_user')
-    item_for_pred = st.selectbox('Item du doan', list(range(model.n_items)), key='pred_item')
+    unique_items = np.unique(model.Y_data[:, 1]).astype(int).tolist()
+    user_for_pred = st.selectbox('User du doan', unique_users, key='pred_user')
+    item_for_pred = st.selectbox('Item du doan', unique_items, key='pred_item')
 
     if st.button('Du doan diem'):
         score = model.pred(user_for_pred, item_for_pred, normalized=1 if normalized else 0)
@@ -139,7 +141,7 @@ with col2:
 
 st.subheader('Tong hop goi y cho tat ca user')
 all_recs = []
-for u in range(model.n_users):
+for u in unique_users:
     mode = 'top_n' if recommendation_mode == 'Top-N' else 'threshold'
     rec_items, _ = recommend_for_user(
         model,
