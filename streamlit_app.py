@@ -16,7 +16,8 @@ def parse_uploaded_file(uploaded_file):
 
 
 def build_model(y_data, k):
-    model = CF(y_data, k=k)
+    # Sử dụng cấu hình tối ưu nhất: Item-Item CF (uuCF=0), Cosine
+    model = CF(y_data, k=k, uuCF=0, sim_type='cosine')
     model.fit()
     return model
 
@@ -45,7 +46,7 @@ st.caption('Giao dien demo thuat toan goi y trong `test_CF.py` (de nhin, de hieu
 with st.sidebar:
     st.header('Cau hinh mo hinh')
     source = st.radio('Nguon du lieu', ['ex.dat', 'ex2.dat', 'ml-100k/u.data', 'Upload file'])
-    k = st.slider('So lang gieng gan nhat (k)', min_value=1, max_value=10, value=2)
+    k = st.slider('So lang gieng gan nhat (k)', min_value=1, max_value=100, value=25)
 
     uploaded_file = None
     if source == 'Upload file':
