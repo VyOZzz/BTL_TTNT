@@ -16,8 +16,8 @@ def parse_uploaded_file(uploaded_file):
 
 
 def build_model(y_data, k):
-    # Sử dụng cấu hình tối ưu nhất: Item-Item CF (uuCF=0), Cosine
-    model = CF(y_data, k=k, uuCF=0, sim_type='cosine')
+    # Khởi tạo mô hình CF (mặc định trong test_CF.py là User-User CF dùng Cosine Similarity)
+    model = CF(y_data, k=k)
     model.fit()
     return model
 
@@ -41,7 +41,6 @@ def recommend_for_user(model, user_id, mode='threshold', top_n=5, threshold=0.0,
 
 st.set_page_config(page_title='CF Demo', layout='wide')
 st.title('Collaborative Filtering Demo')
-st.caption('Giao dien demo thuat toan goi y trong `test_CF.py` (de nhin, de hieu).')
 
 with st.sidebar:
     st.header('Cau hinh mo hinh')
