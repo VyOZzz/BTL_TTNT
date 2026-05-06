@@ -6,26 +6,35 @@ from test_CF import CF, load_ratings
 
 
 def parse_uploaded_file(uploaded_file):
-    """Parse uploaded whitespace-separated ratings file to numpy array."""
     r_cols = ['user_id', 'item_id', 'rating']
+    
+    # regex \s+ để handle file cách nhau bằng khoảng trắng hoặc tab
+    # dùng usecols=[0,1,2] để bỏ qua luôn mấy cột thừa như timestamp nếu có
     ratings = pd.read_csv(uploaded_file, sep=r'\s+', names=r_cols, usecols=[0, 1, 2], engine='python')
+    
+    # cast id về int để lát map vào ma trận cho chuẩn (index k xài float đc)
     ratings['user_id'] = ratings['user_id'].astype(np.int32)
     ratings['item_id'] = ratings['item_id'].astype(np.int32)
     ratings['rating'] = ratings['rating'].astype(np.float64)
+    
     return ratings.to_numpy(), ratings
 
 
 def build_model(y_data, k):
-    # Khởi tạo mô hình CF (mặc định trong test_CF.py là User-User CF dùng Cosine Similarity)
+    # init model CF, mặc định file test_CF.py đang chạy User-User dùng Cosine
     model = CF(y_data, k=k)
     model.fit()
     return model
 
 
 def recommend_for_user(model, user_id, mode='threshold', top_n=5, threshold=0.0, normalized=True):
-    """Recommend items for one user using score-threshold or Top-N ranking."""
+    # lấy ra mấy cái index chứa data lịch sử của user này
     ids = np.where(model.Y_data[:, 0] == user_id)[0]
+    
+    # ép qua dạng set để tìm kiếm O(1) cho nhanh
     rated_items = set(model.Y_data[ids, 1].astype(np.int32).tolist())
+    
+    # danh sách mấy phim user chưa xem
     candidates = [i for i in range(model.n_items) if i not in rated_items]
 
     scored_items = []
@@ -33,9 +42,13 @@ def recommend_for_user(model, user_id, mode='threshold', top_n=5, threshold=0.0,
         score = float(model.pred(user_id, item_id, normalized=1 if normalized else 0))
         scored_items.append((item_id, score))
 
+    # sort mảng theo điểm giảm dần
     scored_items.sort(key=lambda x: x[1], reverse=True)
+    
     if mode == 'top_n':
         return [item for item, _ in scored_items[:top_n]], scored_items
+        
+    # rớt xuống đây thì mặc định là mode threshold (ngưỡng)
     return [item for item, score in scored_items if score > threshold], scored_items
 
 
